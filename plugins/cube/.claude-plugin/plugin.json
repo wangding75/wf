@@ -1,0 +1,5 @@
+{
+  "name": "cube",
+  "description": "5-stage development workflow with enforced quality gates, TDD three-layer protection, and automated progress tracking.",
+  "version": "0.1.0"
+}

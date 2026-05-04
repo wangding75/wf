@@ -1,0 +1,30 @@
+language: java
+display_name: Java
+runtime: java
+
+build:
+  tool: maven
+  compile_command: "mvn compile -q"
+
+test:
+  runner: junit5
+  command: "mvn test -q"
+  file_pattern: "*Test.java"
+  coverage_command: "mvn verify -Pjacoco"
+
+schema:
+  type: java-record
+  file_pattern: "*.java"
+  compile_check: "mvn compile -pl schemas -q"
+  model_regex: "public\\s+record\\s+(\\w+)\\s*\\("
+  error_regex: "public\\s+static\\s+final\\s+String\\s+([A-Z_]+)\\s*="
+
+lint:
+  tool: checkstyle
+  command: "mvn checkstyle:check -q"
+
+nonfunc_test_patterns:
+  - "*LoggingTest.java"
+  - "*MetricsTest.java"
+  - "*FallbackTest.java"
+  - "*PerfTest.java"

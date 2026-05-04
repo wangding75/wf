@@ -1,0 +1,11 @@
+{
+  "name": "cube",
+  "version": "0.1.0",
+  "description": "5-stage development workflow with enforced quality gates, TDD three-layer protection, and automated progress tracking.",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Cube Workflow",
+    "shortDescription": "Stage-gate development workflow with TDD and quality gates",
+    "category": "Productivity"
+  }
+}

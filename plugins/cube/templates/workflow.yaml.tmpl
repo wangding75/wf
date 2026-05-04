@@ -1,0 +1,24 @@
+project:
+  name: {{project_name}}
+  language: {{language}}
+  structure: {{structure}}
+
+stages:
+  - id: 01-prd
+    name: PRD
+  - id: 02-design
+    name: Design
+  - id: 03-test-cases
+    name: Test Cases
+  - id: 04-development
+    name: Development
+    on_enter:
+      - create_status_yaml
+      - lock_tests
+  - id: 05-testing
+    name: Testing
+
+{{path_config}}
+
+language_config:
+{{language_config}}

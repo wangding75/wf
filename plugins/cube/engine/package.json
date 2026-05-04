@@ -1,0 +1,9 @@
+{
+  "name": "cube-engine",
+  "version": "0.1.0",
+  "description": "Stage-gate workflow engine (zero external dependencies)",
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
