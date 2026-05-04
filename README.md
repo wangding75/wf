@@ -1,29 +1,20 @@
 # CUBE - Stage-Gate Development Workflow
 
-Enforced stage-gate development workflow plugin for Claude Code. Drives AI to independently complete production-grade development from requirements to deployment.
+Enforced stage-gate development workflow plugin for Claude Code and Codex. Drives AI to independently complete production-grade development from requirements to deployment.
 
 ## Install
 
 ### Claude Code
 
 ```bash
-# GitHub
-/plugin marketplace add wangding/cube-wf
-
-# GitLab or other platforms
-/plugin marketplace add http://gitlab.sh.com/wangding/cube-wf.git
+/plugin marketplace add wangding75/wf
 ```
 
 ### Codex
 
 In Codex, run:
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/wangding/cube-wf/refs/heads/master/.codex/INSTALL.md
-```
-
-Or for GitLab:
-```
-Fetch and follow instructions from http://gitlab.sh.com/wangding/cube-wf/-/raw/master/.codex/INSTALL.md
+Fetch and follow instructions from https://raw.githubusercontent.com/wangding75/wf/refs/heads/main/.codex/INSTALL.md
 ```
 
 ## Features
@@ -72,7 +63,7 @@ CUBE is complementary to [everything-claude-code](https://github.com/affaan-m/ev
 Install both for maximum coverage:
 ```bash
 /plugin marketplace add affaan-m/everything-claude-code
-/plugin marketplace add wangding/cube-wf
+/plugin marketplace add wangding75/wf
 ```
 
 ## Language Presets

@@ -2269,12 +2269,12 @@ export class Orchestrator {
   private findCubePlugin(): string {
     const candidates = [
       join(this.projectRoot, 'plugins', 'cube'),
-      join(process.env.HOME || '', '.claude', 'plugins', 'cache', 'cube-wf', 'cube'),
+      join(process.env.HOME || '', '.claude', 'plugins', 'cache', 'wf', 'cube'),
     ];
     for (const dir of candidates) {
       if (existsSync(join(dir, 'prompts'))) return dir;
     }
-    throw new Error('CUBE plugin not found. Install via: /plugin marketplace add wangding/cube-wf');
+    throw new Error('CUBE plugin not found. Install via: /plugin marketplace add wangding75/wf');
   }
 }
 ```

@@ -1,0 +1,20 @@
+{
+  "name": "wangding75-wf",
+  "interface": {
+    "displayName": "Wangding75 Workflow Plugins"
+  },
+  "plugins": [
+    {
+      "name": "cube",
+      "source": {
+        "source": "local",
+        "path": "./plugins/cube"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
