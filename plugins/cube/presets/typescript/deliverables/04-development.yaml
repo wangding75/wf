@@ -1,0 +1,15 @@
+stage: 04-development
+name: Development
+
+deliverables:
+  - id: tests-pass
+    type: command
+    cmd: "${language_config.test_command}"
+    cwd_stage: false
+    expect_exit_code: 0
+
+  - id: status-complete
+    type: command
+    cmd: "node ${engine_dir}/check-status.mjs"
+    cwd_stage: false
+    expect_exit_code: 0

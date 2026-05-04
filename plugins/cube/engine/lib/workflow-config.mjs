@@ -14,6 +14,7 @@
  *          resolveDeliverablePath, resolveCommand, getConfiguredPaths,
  *          getSourceDirs, getTestDirs, getTestResourceDirs, getDeliverablesDir,
  *          resolveDeliverableManifest, getLanguageConfig, getLanguagePreset,
+ *          normalizeLanguage,
  *          getEffectiveSchemaConfig
  */
 
@@ -377,6 +378,36 @@ function uniquePaths(paths) {
   return [...new Set(paths.filter(Boolean))];
 }
 
+export function normalizeLanguage(language) {
+  const value = (language || 'java').toLowerCase();
+  if (value === 'py') return 'python';
+  if (value === 'ts') return 'typescript';
+  return value;
+}
+
+function getDefaultProjectPaths(config) {
+  const language = normalizeLanguage(config.project && config.project.language);
+  if (language === 'python') {
+    return {
+      source_dir: 'src',
+      test_dir: 'tests',
+      test_resource_dir: 'tests/resources',
+    };
+  }
+  if (language === 'typescript') {
+    return {
+      source_dir: 'src',
+      test_dir: 'tests',
+      test_resource_dir: 'tests/resources',
+    };
+  }
+  return {
+    source_dir: 'src/main/java',
+    test_dir: 'src/test/java',
+    test_resource_dir: 'src/test/resources',
+  };
+}
+
 /**
  * Resolve configured project paths. Supports both single-module `paths.*`
  * configs and multi-module `modules[].*` configs.
@@ -404,15 +435,15 @@ export function getConfiguredPaths(config, key, fallback = null) {
 }
 
 export function getSourceDirs(config) {
-  return getConfiguredPaths(config, 'source_dir', 'src/main/java');
+  return getConfiguredPaths(config, 'source_dir', getDefaultProjectPaths(config).source_dir);
 }
 
 export function getTestDirs(config) {
-  return getConfiguredPaths(config, 'test_dir', 'src/test/java');
+  return getConfiguredPaths(config, 'test_dir', getDefaultProjectPaths(config).test_dir);
 }
 
 export function getTestResourceDirs(config) {
-  return getConfiguredPaths(config, 'test_resource_dir', 'src/test/resources');
+  return getConfiguredPaths(config, 'test_resource_dir', getDefaultProjectPaths(config).test_resource_dir);
 }
 
 /**
@@ -422,7 +453,9 @@ export function resolveCommand(config, cmd) {
   return cmd
     .replace(/\$\{engine_dir\}/g, join(__dirname, '..'))
     .replace(/\$\{(\w+)\.(\w+)\}/g, (match, section, key) => {
-      const sectionObj = config[section];
+      const sectionObj = section === 'language_config'
+        ? getLanguageConfig(config)
+        : config[section];
       if (sectionObj && sectionObj[key]) return sectionObj[key];
       return match;
     });
@@ -432,13 +465,13 @@ export function resolveCommand(config, cmd) {
  * Get the plugin presets deliverables directory for the project's language.
  */
 export function getDeliverablesDir(config) {
-  const language = ((config.project && config.project.language) || 'java').toLowerCase();
+  const language = normalizeLanguage(config.project && config.project.language);
   const pluginRoot = join(__dirname, '..', '..');
   return join(pluginRoot, 'presets', language, 'deliverables');
 }
 
 export function getLanguagePreset(config) {
-  const language = ((config.project && config.project.language) || 'java').toLowerCase();
+  const language = normalizeLanguage(config.project && config.project.language);
   const pluginRoot = join(__dirname, '..', '..');
   const presetPath = join(pluginRoot, 'presets', language, 'preset.yaml');
   if (!existsSync(presetPath)) return {};
@@ -476,5 +509,32 @@ export function resolveDeliverableManifest(config, stageId) {
  * Get the language_config section from config.
  */
 export function getLanguageConfig(config) {
-  return config.language_config || {};
+  const preset = getLanguagePreset(config);
+  const effective = {};
+
+  if (preset.build && preset.build.compile_command) {
+    effective.compile_command = preset.build.compile_command;
+  }
+
+  if (preset.test) {
+    if (preset.test.command) effective.test_command = preset.test.command;
+    if (preset.test.single_command) effective.test_command_single = preset.test.single_command;
+    if (preset.test.file_pattern) effective.test_file_pattern = preset.test.file_pattern;
+    if (preset.test.case_regex) effective.test_case_regex = preset.test.case_regex;
+    if (preset.test.presence_regex) effective.test_presence_regex = preset.test.presence_regex;
+    if (preset.test.coverage_command) effective.coverage_command = preset.test.coverage_command;
+  }
+
+  if (preset.lint && preset.lint.command) {
+    effective.lint_command = preset.lint.command;
+  }
+
+  // Common single-file defaults when preset omits an explicit command.
+  if (!effective.test_command_single && effective.test_command) {
+    const language = normalizeLanguage(config.project && config.project.language);
+    if (language === 'python') effective.test_command_single = 'pytest {{file}}';
+    if (language === 'typescript') effective.test_command_single = 'npm test -- {{file}}';
+  }
+
+  return { ...effective, ...(config.language_config || {}) };
 }

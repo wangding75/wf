@@ -15,7 +15,7 @@
 
 import { readFileSync, existsSync, statSync } from 'fs';
 import { join } from 'path';
-import { execSync } from 'child_process';
+import { execFileSync, execSync } from 'child_process';
 import {
   loadConfig, getIterationDir, parseYaml, getLanguageConfig, getSourceDirs
 } from './lib/workflow-config.mjs';
@@ -68,6 +68,34 @@ function resolveSkeletonPath(sourceDirs, rawPath) {
     if (existsSync(candidate)) return candidate;
   }
   return null;
+}
+
+function canRunWithoutShell(cmd) {
+  return !/[|&;<>`]/.test(cmd);
+}
+
+function tokenizeCommand(cmd) {
+  const tokens = [];
+  const re = /"([^"\\]*(?:\\.[^"\\]*)*)"|'([^'\\]*(?:\\.[^'\\]*)*)'|(\S+)/g;
+  let match;
+  while ((match = re.exec(cmd)) !== null) {
+    tokens.push(match[1] ?? match[2] ?? match[3]);
+  }
+  return tokens;
+}
+
+function runCompileCommand(cmd, options) {
+  try {
+    execSync(cmd, { ...options, shell: true });
+    return null;
+  } catch (err) {
+    if (err && err.code === 'EPERM' && canRunWithoutShell(cmd)) {
+      const [file, ...args] = tokenizeCommand(cmd);
+      execFileSync(file, args, options);
+      return null;
+    }
+    return err;
+  }
 }
 
 function main() {
@@ -174,15 +202,14 @@ function main() {
 
   if (compileCmd) {
     console.log(`\nCompile check: ${compileCmd}`);
-    try {
-      execSync(compileCmd, {
-        cwd: projectRoot,
-        stdio: ['pipe', 'pipe', 'pipe'],
-        timeout: 120000,
-        shell: true,
-      });
+    const err = runCompileCommand(compileCmd, {
+      cwd: projectRoot,
+      stdio: ['pipe', 'pipe', 'pipe'],
+      timeout: 120000,
+    });
+    if (!err) {
       console.log(`   ✓ compilation passed`);
-    } catch (err) {
+    } else {
       const stderr = (err.stderr || '').toString().trim().slice(0, 500);
       console.log(`   ✗ compilation failed: ${stderr}`);
       hasErrors = true;

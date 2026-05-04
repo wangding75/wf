@@ -4,8 +4,8 @@
  *
  * 1. Reads design.md to extract Development Tasks
  * 2. Reads test-map.yaml to verify 100% task coverage
- * 3. Validates each mapped test file: exists, non-empty, contains @Test,
- *    and @Test count equals declared test_cases
+ * 3. Validates each mapped test file: exists, non-empty, contains tests,
+ *    and detected test count equals declared test_cases
  * 4. Validates optional type_tests entries for feature-level/type-specific
  *    tests and resources
  *
@@ -19,7 +19,7 @@ import { readFileSync, existsSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
 import {
   loadConfig, getIterationDir, parseYaml,
-  getTestDirs, getTestResourceDirs
+  getTestDirs, getTestResourceDirs, getLanguageConfig, getLanguagePreset
 } from './lib/workflow-config.mjs';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -144,7 +144,22 @@ function validateMappedTaskEntries(mappedTasks, devTasks) {
   return errors;
 }
 
-export function validateStructure(mappedTasks, testDirs) {
+function getTestValidationConfig(config = {}) {
+  const preset = getLanguagePreset(config);
+  const languageConfig = getLanguageConfig(config);
+  const effective = {
+    test_case_regex: preset.test && preset.test.case_regex,
+    test_presence_regex: preset.test && preset.test.presence_regex,
+  };
+
+  return { ...effective, ...languageConfig };
+}
+
+function getRegex(pattern, fallback) {
+  return new RegExp(pattern || fallback, 'gm');
+}
+
+export function validateStructure(mappedTasks, testDirs, testConfig = {}) {
   const allFiles = testDirs.flatMap(dir => walkDir(dir));
   const fileMap = new Map();
   for (const f of allFiles) {
@@ -183,21 +198,23 @@ export function validateStructure(mappedTasks, testDirs) {
     }
 
     const content = readFileSync(filePath, 'utf-8');
-    const testCount = (content.match(/@Test\b/g) || []).length;
+    const caseRe = getRegex(testConfig.test_case_regex, '@Test\\b');
+    const presenceRe = getRegex(testConfig.test_presence_regex || testConfig.test_case_regex, '@Test\\b');
+    const testCount = (content.match(caseRe) || []).length;
 
-    if (testCount === 0) {
-      results.push({ file: fileLabel, ok: false, message: 'no @Test annotations found' });
+    if (!(content.match(presenceRe) || []).length) {
+      results.push({ file: fileLabel, ok: false, message: 'no test cases found' });
       errors.push(fileLabel);
       continue;
     }
 
     if (testCount !== declared) {
-      results.push({ file: fileLabel, ok: false, message: `${testCount} @Test (declared ${declared})` });
+      results.push({ file: fileLabel, ok: false, message: `${testCount} test case(s) (declared ${declared})` });
       errors.push(fileLabel);
       continue;
     }
 
-    results.push({ file: fileLabel, ok: true, message: `${testCount} @Test (declared ${declared})` });
+    results.push({ file: fileLabel, ok: true, message: `${testCount} test case(s) (declared ${declared})` });
   }
 
   return { results, errors };
@@ -363,7 +380,7 @@ function main() {
   // ── Structure validation ──
   const testDirs = getTestDirs(config);
   const testResourceDirs = getTestResourceDirs(config);
-  const { results, errors } = validateStructure(mappedTasks, testDirs);
+  const { results, errors } = validateStructure(mappedTasks, testDirs, getTestValidationConfig(config));
 
   console.log(`\nStructure validation:`);
   for (const r of results) {

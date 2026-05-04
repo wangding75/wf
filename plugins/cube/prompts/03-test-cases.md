@@ -66,7 +66,7 @@
 
 按 design.md 的 Development Tasks 顺序，**逐任务**编写测试文件：
 
-1. 每个 Development Task 对应一个测试文件，测试文件中的所有 `@Test` 方法必须直接验证**该任务描述的行为**
+1. 每个 Development Task 对应一个测试文件，测试文件中的所有测试用例函数/方法必须直接验证**该任务描述的行为**
 2. 在项目测试目录（`${paths.test_dir}`）下创建测试文件
 3. 测试文件的目录结构应与源码目录保持镜像关系
 4. 遵循项目的测试命名规范（如 Java: `*Test.java`）
@@ -124,7 +124,7 @@
 
 **审查输入**：所有测试文件 + 测试资源 + design.md（Output Contract、Development Tasks、API Design、SQL Contract 章节）
 **审查维度**：
-1. **行为绑定**：每个测试文件的 @Test 方法是否真的在验证对应 Development Task 描述的行为？有无测试名与实际断言不匹配的情况？
+1. **行为绑定**：每个测试文件的测试用例函数/方法是否真的在验证对应 Development Task 描述的行为？有无测试名与实际断言不匹配的情况？
 2. **断言有效性**：Assert 断言是否验证了有意义的业务结果？有无只断言 `assertNotNull` 而不验证具体值的弱断言？
 3. **错误码覆盖**：design.md 中声明的每个错误码是否都有对应的测试用例触发该错误码？
 4. **边界值充分性**：关键字段的空值、极值、临界条件是否覆盖？
@@ -162,12 +162,12 @@ type_tests:
 - `task`：必须与 design.md 中 Development Tasks 的任务描述**逐字一致**
 - `module`：任务所属模块（包路径关键词，如 `service/dsl`），用于同名文件消歧
 - `test_file`：覆盖该任务的测试文件名，必须是 `${paths.test_dir}` 下实际存在的文件
-- `test_cases`：该任务对应的 `@Test` 方法数量，必须与文件中实际的 `@Test` 注解数量一致
+- `test_cases`：该任务对应的测试用例数量，必须与文件中实际可识别的测试函数/方法数量一致
 - `type_tests`：记录按 `standards/testing/` 编写的 feature 级、集成级、E2E、SQL 等测试；`type` 必须使用规范化 type id，`standard` 必须匹配该 type，覆盖的任务描述必须与 design.md 逐字一致
 
 **每个 Development Task 都必须有对应条目，覆盖率必须 100%。**
 
-> 自动检查会验证：覆盖率 100% → 文件存在 → 文件非空 → 包含 `@Test` → `@Test` 数量 = `test_cases`
+> 自动检查会验证：覆盖率 100% → 文件存在 → 文件非空 → 包含测试用例 → 测试用例数量 = `test_cases`
 
 提交：`docs: generate test coverage map`
 

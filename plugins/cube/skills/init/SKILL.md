@@ -1,7 +1,7 @@
 ---
 name: init
 description: "Initialize or activate stage-gate development workflow. For new projects: scans code, creates .cube/ structure, generates project-level docs. For existing iterations: shows status and suggests next command."
-argument-hint: "[language: java|python]"
+argument-hint: "[language: java|python|py|typescript|ts]"
 allowed-tools: Read Write Bash Glob Grep
 ---
 
@@ -50,7 +50,7 @@ Scan the project directory to detect:
 |------|----------|-----------|
 | `build.gradle` or `build.gradle.kts` | Java | Gradle |
 | `pom.xml` | Java | Maven |
-| `package.json` | JavaScript/TypeScript | npm/yarn |
+| `package.json` | TypeScript/JavaScript | npm/yarn |
 | `requirements.txt` or `pyproject.toml` | Python | pip/poetry |
 
 If no build file found, parse `$ARGUMENTS` for language hint or ask the user.
@@ -67,12 +67,19 @@ For Maven, read root `pom.xml`:
 
 ### 2c. Source Paths
 
-**Single-module:**
+**Single-module examples:**
 ```yaml
+# Java
 paths:
   source_dir: src/main/java
   test_dir: src/test/java
   test_resource_dir: src/test/resources
+
+# Python / TypeScript
+paths:
+  source_dir: src
+  test_dir: tests
+  test_resource_dir: tests/resources
 ```
 
 **Multi-module:** Parse module names from build file, construct module list:
@@ -97,6 +104,7 @@ Verify paths actually exist by listing directories. If a standard path doesn't e
 | Gradle | `./gradlew compileJava -q` | `./gradlew test -q` | `./gradlew test --tests '{{class}}' -q` |
 | Maven | `mvn compile -q` | `mvn test -q` | `mvn test -Dtest={{class}} -q` |
 | npm | `npm run build` | `npm test` | `npm test -- {{file}}` |
+| poetry / pip | `python -m compileall src` | `pytest` | `pytest {{file}}` |
 
 ---
 
@@ -133,7 +141,14 @@ language_config:
 |-----------|-----------|----------------|-------------|-------------------|-------------------|
 | Gradle | `gradle` | `./gradlew compileJava -q` | `./gradlew test -q` | `./gradlew test --tests '{{class}}' -q` | `*Test.java` |
 | Maven | `maven` | `mvn compile -q` | `mvn test -q` | `mvn test -Dtest={{class}} -q` | `*Test.java` |
-| npm | `npm` | `npm run build` | `npm test` | `npm test -- {{file}}` | `*.test.js` |
+| npm | `npm` | `npm run build` | `npm test` | `npm test -- {{file}}` | `*.test.ts` |
+| poetry | `poetry` | `python -m compileall src` | `pytest` | `pytest {{file}}` | `test_*.py` |
+| pip | `pip` | `python -m compileall src` | `pytest` | `pytest {{file}}` | `test_*.py` |
+
+### 3b-1. Language normalization
+
+- Accept aliases `py` → `python`, `ts` → `typescript`.
+- Always write the canonical value to `project.language` in `workflow.yaml`.
 
 Write to `.cube/config/workflow.yaml`.
 

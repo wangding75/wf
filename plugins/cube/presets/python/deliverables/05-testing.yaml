@@ -1,0 +1,13 @@
+stage: 05-testing
+name: Testing
+
+deliverables:
+  - id: test-report
+    type: file
+    path: test-report.md
+    required: true
+    min_size_bytes: 500
+    must_contain:
+      - "Test Scope"
+      - "Pass Criteria"
+      - "Standards Evidence"

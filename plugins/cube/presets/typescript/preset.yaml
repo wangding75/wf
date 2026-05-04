@@ -1,0 +1,26 @@
+language: typescript
+display_name: TypeScript
+runtime: node
+
+build:
+  tool: npm
+  compile_command: "npm run build"
+
+test:
+  runner: jest-vitest
+  command: "npm test"
+  single_command: "npm test -- {{file}}"
+  file_pattern: "*.test.ts"
+  case_regex: "\\b(?:it|test)\\s*\\("
+  presence_regex: "\\b(?:it|test)\\s*\\("
+  coverage_command: "npm test -- --coverage"
+
+schema:
+  type: typescript-schema
+  file_pattern: "*.ts"
+  model_regex: "^(?:export\\s+)?(?:interface|type|class)\\s+(\\w+)\\b"
+  error_regex: "(?:code|CODE)\\s*:\\s*['\\\"]([A-Z0-9_]+)['\\\"]"
+
+lint:
+  tool: eslint
+  command: "npm run lint"

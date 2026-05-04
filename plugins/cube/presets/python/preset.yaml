@@ -1,0 +1,26 @@
+language: python
+display_name: Python
+runtime: python
+
+build:
+  tool: pytest
+  compile_command: "python -m compileall src"
+
+test:
+  runner: pytest
+  command: "pytest"
+  single_command: "pytest {{file}}"
+  file_pattern: "test_*.py"
+  case_regex: "^\\s*def\\s+test_\\w+\\s*\\("
+  presence_regex: "^\\s*def\\s+test_\\w+\\s*\\("
+  coverage_command: "pytest --cov=src --cov-report=term-missing"
+
+schema:
+  type: python-model
+  file_pattern: "*.py"
+  model_regex: "^class\\s+(\\w+)\\s*\\((?:[^)]*BaseModel[^)]*|[^)]*TypedDict[^)]*)\\)\\s*:"
+  error_regex: "^\\s+([A-Z_]+)\\s*="
+
+lint:
+  tool: ruff
+  command: "ruff check ."

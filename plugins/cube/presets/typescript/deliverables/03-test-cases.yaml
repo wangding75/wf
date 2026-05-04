@@ -1,0 +1,15 @@
+stage: 03-test-cases
+name: Test Cases
+
+deliverables:
+  - id: tests-all-fail
+    type: command
+    cmd: "${language_config.test_command}"
+    cwd_stage: false
+    expect_exit_code: 1
+
+  - id: test-map-coverage
+    type: command
+    cmd: "node ${engine_dir}/check-test-map.mjs"
+    cwd_stage: false
+    expect_exit_code: 0

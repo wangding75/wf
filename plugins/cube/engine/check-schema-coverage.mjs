@@ -13,7 +13,7 @@
 import { readFileSync, existsSync, readdirSync } from 'fs';
 import { join, resolve } from 'path';
 import {
-  loadConfig, parseYaml, getSourceDirs, getTestDirs, getEffectiveSchemaConfig
+  loadConfig, parseYaml, getSourceDirs, getTestDirs, getEffectiveSchemaConfig, normalizeLanguage
 } from './lib/workflow-config.mjs';
 import { fnmatch } from './check-stage.mjs';
 
@@ -106,8 +106,12 @@ export function checkCoverage(config) {
   // Default patterns for Python (Pydantic)
   const modelRegex = langConfig.model_regex || '^class\\s+(\\w+)\\s*\\(\\s*BaseModel\\s*\\)';
   const errorRegex = langConfig.error_regex || '^\\s+([A-Z_]+)\\s*=';
-  const language = ((config.project && config.project.language) || '').toLowerCase();
-  const defaultTestPattern = language === 'python' ? 'test_*.py' : '*Test.java';
+  const language = normalizeLanguage(config.project && config.project.language);
+  const defaultTestPattern = language === 'python'
+    ? 'test_*.py'
+    : language === 'typescript'
+      ? '*.test.ts'
+      : '*Test.java';
   const testPattern = langConfig.test_pattern || langConfig.test_file_pattern || defaultTestPattern;
   const schemaPattern = langConfig.schema_file_pattern || null;
 

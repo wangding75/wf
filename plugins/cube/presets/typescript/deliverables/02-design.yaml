@@ -1,0 +1,21 @@
+stage: 02-design
+name: Design
+
+deliverables:
+  - id: design-doc
+    type: file
+    path: design.md
+    required: true
+    min_size_bytes: 1500
+    must_contain:
+      - "Flow Design"
+      - "Table Design"
+      - "API"
+      - "Output Contract"
+      - "Development Tasks"
+
+  - id: skeleton-compiles
+    type: command
+    cmd: "node ${engine_dir}/check-skeleton-map.mjs"
+    cwd_stage: false
+    expect_exit_code: 0

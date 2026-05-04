@@ -17,7 +17,7 @@
 
 import { readFileSync, existsSync, statSync, readdirSync } from 'fs';
 import { join, relative } from 'path';
-import { execSync } from 'child_process';
+import { execFileSync, execSync } from 'child_process';
 import {
   loadConfig, getIterationDir, resolveDeliverableManifest,
   resolveDeliverablePath, resolveCommand, parseYaml
@@ -46,6 +46,34 @@ function walkDir(dir) {
     }
   }
   return results;
+}
+
+function canRunWithoutShell(cmd) {
+  return !/[|&;<>`]/.test(cmd);
+}
+
+function tokenizeCommand(cmd) {
+  const tokens = [];
+  const re = /"([^"\\]*(?:\\.[^"\\]*)*)"|'([^'\\]*(?:\\.[^'\\]*)*)'|(\S+)/g;
+  let match;
+  while ((match = re.exec(cmd)) !== null) {
+    tokens.push(match[1] ?? match[2] ?? match[3]);
+  }
+  return tokens;
+}
+
+function runCommand(cmd, options) {
+  try {
+    execSync(cmd, { ...options, shell: true });
+    return null;
+  } catch (err) {
+    if (err && err.code === 'EPERM' && canRunWithoutShell(cmd)) {
+      const [file, ...args] = tokenizeCommand(cmd);
+      execFileSync(file, args, options);
+      return null;
+    }
+    return err;
+  }
 }
 
 // ─── Checkers ───────────────────────────────────────────────────────────────
@@ -103,30 +131,30 @@ export function checkDir(spec, iterDir, projectRoot, config) {
   return [true, `ok (${matchedFiles.length} files)`];
 }
 
-export function checkCommand(spec, iterDir, projectRoot, config) {
+export function checkCommand(spec, iterDir, projectRoot, config, commandRunner = runCommand) {
   const cmd = resolveCommand(config, spec.cmd);
   const cwd = spec.cwd_stage !== false ? iterDir : projectRoot;
   const expectExit = spec.expect_exit_code !== undefined ? spec.expect_exit_code : 0;
+  const options = {
+    cwd,
+    stdio: ['pipe', 'pipe', 'pipe'],
+    timeout: 120000,
+  };
 
-  try {
-    execSync(cmd, {
-      cwd,
-      stdio: ['pipe', 'pipe', 'pipe'],
-      timeout: 120000,
-      shell: true,
-    });
+  const err = commandRunner(cmd, options);
+  if (!err) {
     if (expectExit !== 0) {
       return [false, `exit=0 (expected ${expectExit})`];
     }
     return [true, 'ok (exit=0)'];
-  } catch (err) {
-    const exitCode = err.status || 1;
-    if (exitCode === expectExit) {
-      return [true, `ok (exit=${exitCode})`];
-    }
-    const stderr = (err.stderr || '').toString().trim().slice(0, 200);
-    return [false, `exit=${exitCode} (expected ${expectExit}): ${stderr}`];
   }
+
+  const exitCode = err.status || 1;
+  if (exitCode === expectExit) {
+    return [true, `ok (exit=${exitCode})`];
+  }
+  const stderr = (err.stderr || '').toString().trim().slice(0, 200);
+  return [false, `exit=${exitCode} (expected ${expectExit}): ${stderr}`];
 }
 
 export function checkFilesPatterns(spec, iterDir, projectRoot, config) {
@@ -164,7 +192,7 @@ const CHECKERS = {
 
 // ─── Main Check Function ───────────────────────────────────────────────────
 
-export function checkStage(stageId, config) {
+export function checkStage(stageId, config, overrides = {}) {
   const iterDir = getIterationDir(config);
   const projectRoot = config._projectRoot;
   const manifest = resolveDeliverableManifest(config, stageId);
@@ -207,7 +235,9 @@ export function checkStage(stageId, config) {
 
     let ok, msg;
     try {
-      [ok, msg] = checker(item, iterDir, projectRoot, config);
+      [ok, msg] = itemType === 'command'
+        ? checker(item, iterDir, projectRoot, config, overrides.commandRunner)
+        : checker(item, iterDir, projectRoot, config);
     } catch (e) {
       ok = false;
       msg = `checker error: ${e.message}`;

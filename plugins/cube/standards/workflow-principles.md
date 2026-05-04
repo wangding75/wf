@@ -31,8 +31,8 @@
 按 STATUS.yaml 的任务顺序，逐任务实现：
 
 1. 从 STATUS.yaml 找到第一个 phase 不是 `done` 的任务
-2. 读取该任务的 test_file，分析每个 @Test 方法的期望行为
-3. 在 `${paths.source_dir}` 编写实现代码，目标：让该 test_file 中所有 @Test 通过
+2. 读取该任务的 test_file，分析每个测试用例函数/方法的期望行为
+3. 在 `${paths.source_dir}` 编写实现代码，目标：让该 test_file 中所有测试用例通过
 4. **绝不修改测试文件及测试资源文件** — 测试是锁定的契约，实现必须适配测试
 5. 测试通过后更新 STATUS.yaml：phase → `green`，提交：`feat(<scope>): implement <task>`
 6. 在所有测试保持通过的前提下重构，更新 STATUS.yaml：phase → `done`，提交：`refactor(<scope>): refactor after green`

@@ -1,0 +1,12 @@
+stage: 01-prd
+name: PRD
+
+deliverables:
+  - id: prd-doc
+    type: file
+    path: prd.md
+    required: true
+    min_size_bytes: 500
+    must_contain:
+      - "Functional Requirements"
+      - "Non-Functional Requirements"
