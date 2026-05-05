@@ -69,6 +69,11 @@ export function updateStateYaml(config, currentStage, newStage) {
       out.push(line.replace(/PENDING|IN_PROGRESS/, 'PASS'));
       continue;
     }
+    // Mark the newly entered stage as in progress.
+    if (line.includes(`${newStage}:`) && line.includes('PENDING')) {
+      out.push(line.replace('PENDING', 'IN_PROGRESS'));
+      continue;
+    }
     out.push(line);
   }
 
