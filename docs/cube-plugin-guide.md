@@ -145,20 +145,9 @@ plugins/cube/
 │   └── settings.local.json.tmpl    # Claude Code deny rules 模板
 │
 └── presets/                        # 语言预设
-    └── java/
-        ├── preset.yaml             # Java 构建/测试/schema/lint 规则
-        ├── deliverables/           # 各阶段门禁检查规则
-        │   ├── 01-prd.yaml
-        │   ├── 02-design.yaml
-        │   ├── 03-test-cases.yaml
-        │   ├── 04-development.yaml
-        │   └── 05-testing.yaml
-        └── rules/                  # Java 编码、测试、安全等规则
-            ├── coding-style.md
-            ├── hooks.md
-            ├── patterns.md
-            ├── security.md
-            └── testing.md
+    ├── java/
+    ├── python/
+    └── typescript/                 # 每种语言均包含 preset.yaml、deliverables/、rules/
 ```
 
 ### 项目运行时目录结构
@@ -378,7 +367,7 @@ plugins/cube/
 | **Standards** | `standards/tdd-principles.md` / `standards/workflow-principles.md` | 约束测试即契约、Red 阶段工作流 |
 | **Testing Standards** | `standards/testing/integration.md` / `web-e2e.md` / `sql-query.md` / `cli.md` / `batch-job.md` / `messaging.md` / `library.md` | 按功能类型定义测试范围 |
 | **Preset Deliverables** | `presets/java/deliverables/03-test-cases.yaml` | 要求全量测试处于 FAIL，且 `test-map` 校验通过 |
-| **Engine** | `check-test-map.mjs` / `check-stage.mjs` | 校验任务映射、`@Test` 数量、`type_tests` 结构和覆盖率 |
+| **Engine** | `check-test-map.mjs` / `check-stage.mjs` | 校验任务映射、测试用例数量、`type_tests` 结构和覆盖率 |
 
 ---
 
@@ -738,7 +727,7 @@ locked → green → done
 
 - `Development Tasks` 覆盖率
 - `test_file` 存在性
-- `@Test` 数量与 `test_cases` 一致
+- 测试用例数量与 `test_cases` 一致
 - `type_tests` 类型、标准路径、资源文件合法
 
 ### `engine/check-test-map.test.mjs`
@@ -749,7 +738,7 @@ locked → green → done
 
 **覆盖点**：
 
-- 声明测试数和真实 `@Test` 数量一致 / 不一致
+- 声明测试数和真实测试用例数量一致 / 不一致
 
 ### `engine/check-skeleton-map.mjs`
 
@@ -918,20 +907,20 @@ test-report.md
 
 ## 9. Preset 与语言支持
 
-当前仓库内置 Java preset。
+当前仓库内置 Java、Python、TypeScript preset，并接受别名 `py` / `ts`，运行时统一归一化为 `python` / `typescript`。
 
-### `presets/java/preset.yaml`
+### `presets/{language}/preset.yaml`
 
 定义：
 
-- 构建工具：Maven
-- 编译命令：`mvn compile -q`
-- 测试命令：`mvn test -q`
-- 覆盖率命令：`mvn verify -Pjacoco`
+- 构建工具与编译命令
+- 测试命令、单文件测试命令、测试文件匹配规则
+- 测试用例计数规则（供 `check-test-map.mjs` 使用）
+- 覆盖率命令
 - schema 提取规则
 - lint 工具和命令
 
-### `presets/java/deliverables/*.yaml`
+### `presets/{language}/deliverables/*.yaml`
 
 定义每个阶段门禁规则：
 
@@ -941,9 +930,9 @@ test-report.md
 - `04-development.yaml`
 - `05-testing.yaml`
 
-### `presets/java/rules/*.md`
+### `presets/{language}/rules/*.md`
 
-定义 Java 语言规则：
+定义对应语言的编码规则：
 
 - `coding-style.md`
 - `hooks.md`

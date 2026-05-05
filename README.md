@@ -24,7 +24,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/wangding75/
 - **TDD Three-Layer Protection**: Claude Code deny rules + git pre-commit hook + OS file permissions
 - **Branch-Based Iterations**: Each branch = one PRD = one complete iteration cycle, state tracked in `.cube/iterations/{branch}/`
 - **Automated Progress Tracking**: STATUS.yaml (module-level TDD progress), state.yaml (stage progression)
-- **Language Presets**: Java (JUnit5/Gradle/Maven) built-in, extensible to other languages
+- **Language Presets**: Java, Python, and TypeScript built-in
 
 ## Commands
 
@@ -68,12 +68,24 @@ Install both for maximum coverage:
 
 ## Language Presets
 
-### Java (built-in)
+### Java
 - Build: Gradle / Maven (auto-detected)
 - Test: JUnit 5 + AssertJ + Mockito
 - Lint: Checkstyle (Google style)
 - Coverage: JaCoCo (80%+ target)
 - Coding rules: Based on [ECC Java rules](https://github.com/affaan-m/everything-claude-code/tree/main/rules/java)
+
+### Python
+- Build: `python -m compileall src`
+- Test: `pytest`
+- Lint: `ruff`
+- Coverage: `pytest --cov=src --cov-report=term-missing`
+
+### TypeScript
+- Build: `npm run build`
+- Test: `npm test`
+- Lint: `npm run lint`
+- Coverage: `npm test -- --coverage`
 
 ## License
 
