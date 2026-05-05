@@ -17,6 +17,11 @@ In Codex, run:
 Fetch and follow instructions from https://raw.githubusercontent.com/wangding75/wf/refs/heads/main/.codex/INSTALL.md
 ```
 
+To update an existing installation and clear stale plugin cache, run:
+```
+Fetch and follow instructions from https://raw.githubusercontent.com/wangding75/wf/refs/heads/main/UPDATE.md
+```
+
 ## Features
 
 - **5-Stage Gate Workflow**: PRD → Design → Test Cases (Red) → Development (Green) → Testing
