@@ -62,15 +62,26 @@ function tokenizeCommand(cmd) {
   return tokens;
 }
 
-function runCommand(cmd, options) {
+function normalizeExecutable(file) {
+  return file === 'node' ? process.execPath : file;
+}
+
+export function runCommand(cmd, options, deps = {}) {
+  const shellRunner = deps.shellRunner || ((command, runOptions) => execSync(command, { ...runOptions, shell: true }));
+  const fileRunner = deps.fileRunner || ((file, args, runOptions) => execFileSync(file, args, runOptions));
+
   try {
-    execSync(cmd, { ...options, shell: true });
+    shellRunner(cmd, options);
     return null;
   } catch (err) {
     if (err && err.code === 'EPERM' && canRunWithoutShell(cmd)) {
-      const [file, ...args] = tokenizeCommand(cmd);
-      execFileSync(file, args, options);
-      return null;
+      try {
+        const [file, ...args] = tokenizeCommand(cmd);
+        fileRunner(normalizeExecutable(file), args, options);
+        return null;
+      } catch (fallbackErr) {
+        return fallbackErr;
+      }
     }
     return err;
   }

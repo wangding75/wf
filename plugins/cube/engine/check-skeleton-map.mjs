@@ -84,15 +84,23 @@ function tokenizeCommand(cmd) {
   return tokens;
 }
 
+function normalizeExecutable(file) {
+  return file === 'node' ? process.execPath : file;
+}
+
 function runCompileCommand(cmd, options) {
   try {
     execSync(cmd, { ...options, shell: true });
     return null;
   } catch (err) {
     if (err && err.code === 'EPERM' && canRunWithoutShell(cmd)) {
-      const [file, ...args] = tokenizeCommand(cmd);
-      execFileSync(file, args, options);
-      return null;
+      try {
+        const [file, ...args] = tokenizeCommand(cmd);
+        execFileSync(normalizeExecutable(file), args, options);
+        return null;
+      } catch (fallbackErr) {
+        return fallbackErr;
+      }
     }
     return err;
   }

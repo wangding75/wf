@@ -49,8 +49,13 @@ export function showProgress(config) {
   console.log('   | Stage | Name | Status | Deliverables |');
   console.log('   |-------|------|--------|-------------|');
 
+  let currentStageReport = null;
+
   for (const stage of stages) {
     const report = checkStage(stage.id, config);
+    if (stage.id === state.current_stage) {
+      currentStageReport = report;
+    }
     const [statusLabel] = determineStageStatus(report);
     const progress = report.status === 'NO_MANIFEST' ? 'No manifest' : `${report.passed}/${report.total}`;
     const stageNum = stage.id.split('-')[0];
@@ -60,13 +65,10 @@ export function showProgress(config) {
   console.log('');
 
   // Show available commands based on current stage
-  const currentStage = state.current_stage;
-  const stageState = state.stages ? state.stages[currentStage] : 'PENDING';
-
   console.log('   Available commands:');
   console.log('     /cube:dev       — Execute current stage work');
   console.log('     /cube:check     — Check current stage deliverables');
-  if (stageState === 'PASS') {
+  if (currentStageReport && currentStageReport.status === 'PASS') {
     console.log('     /cube:advance   — Advance to next stage');
   }
   console.log('     /cube:status    — Show this progress view');
