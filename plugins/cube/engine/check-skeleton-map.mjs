@@ -17,7 +17,7 @@ import { readFileSync, existsSync, statSync } from 'fs';
 import { join } from 'path';
 import { execFileSync, execSync } from 'child_process';
 import {
-  loadConfig, getIterationDir, parseYaml, getLanguageConfig, getSourceDirs
+  loadConfig, getIterationDir, parseYaml, getLanguageConfig, getSourceDirs, normalizeLanguage
 } from './lib/workflow-config.mjs';
 
 function extractDevTasks(designPath) {
@@ -96,6 +96,38 @@ function runCompileCommand(cmd, options) {
     }
     return err;
   }
+}
+
+export function resolveCompileCommand(config, projectRoot = config._projectRoot) {
+  const langConfig = getLanguageConfig(config);
+  const compileCmd = langConfig && langConfig.compile_command;
+  const language = normalizeLanguage(config.project && config.project.language);
+
+  if (!compileCmd || language !== 'typescript' || compileCmd !== 'npm run build') {
+    return compileCmd;
+  }
+
+  const packageJsonPath = join(projectRoot, 'package.json');
+  if (!existsSync(packageJsonPath)) {
+    return compileCmd;
+  }
+
+  try {
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
+    const buildScript = packageJson && packageJson.scripts && packageJson.scripts.build;
+    if (typeof buildScript === 'string' && buildScript.trim()) {
+      return compileCmd;
+    }
+  } catch {
+    return compileCmd;
+  }
+
+  const tsconfigPath = join(projectRoot, 'tsconfig.json');
+  if (existsSync(tsconfigPath)) {
+    return 'npx tsc --noEmit --project tsconfig.json';
+  }
+
+  return compileCmd;
 }
 
 function main() {
@@ -197,8 +229,7 @@ function main() {
   }
 
   // ── Compile check ──
-  const langConfig = getLanguageConfig(config);
-  const compileCmd = langConfig && langConfig.compile_command;
+  const compileCmd = resolveCompileCommand(config, projectRoot);
 
   if (compileCmd) {
     console.log(`\nCompile check: ${compileCmd}`);
@@ -224,4 +255,8 @@ function main() {
   process.exit(0);
 }
 
-main();
+if (process.argv[1] && (
+  process.argv[1].endsWith('check-skeleton-map.mjs')
+)) {
+  main();
+}
